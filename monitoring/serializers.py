@@ -24,4 +24,7 @@ class AgentSerializer(serializers.ModelSerializer):
         return value
 
 
-
+class EndpointSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Endpoint
+        exclude = []
