@@ -60,7 +60,7 @@ USE_L10N = False
 
 USE_TZ = False
 
-ENVIRONMENT = os.getenv("ENVIRONMENT", "PRODUCTION")
+ENVIRONMENT = os.getenv("PAYESHGAR_ENVIRONMENT", "PRODUCTION")
 
 if ENVIRONMENT == "PRODUCTION":
     from . import production
@@ -68,6 +68,6 @@ elif ENVIRONMENT == "DEVELOPMENT":
     from . import development
 
 try:
-    from . import local_settings
+    from payeshgar_server.settings.local_settings import *
 except:
     pass
