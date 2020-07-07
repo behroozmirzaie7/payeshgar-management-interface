@@ -69,9 +69,10 @@ class HTTPEndpointDetail(models.Model):
 
 class MonitoringPolicy(models.Model):
     endpoint = models.OneToOneField(Endpoint, on_delete=models.CASCADE, related_name="monitoring_policy")
-    agent_selector = models.CharField(max_length=64, help_text="Examples: europe.* or hetzner.* depending on how you "
+    agent_selector = models.CharField(max_length=64, default="", blank=True,
+                                      help_text="Examples: europe.* or hetzner.* depending on how you "
                                                                "defined your agents namespaces")
-    interval = models.IntegerField(default=15, verbose_name="Interval in seconds")
+    interval = models.PositiveIntegerField(default=30, verbose_name="Interval in seconds")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

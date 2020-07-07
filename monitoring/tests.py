@@ -5,7 +5,7 @@ from rest_framework.test import APITestCase
 
 
 class EndpointCreationTestCase(APITestCase):
-    def test_create_simple_http_endpoint(self):
+    def test_create_simple_http_endpoint_with_default_policy(self):
         testcase = {
             "http_details": {
                 "hostname": "google.com",
@@ -23,7 +23,61 @@ class EndpointCreationTestCase(APITestCase):
         self.assertEquals(response.status_code, 201)
         self.assertTrue(models.Endpoint.objects.all().exists())
         self.assertTrue(models.HTTPEndpointDetail.objects.all().exists())
+        self.assertTrue(models.MonitoringPolicy.objects.all().exists())
 
+    def test_create_simple_http_endpoint_with_non_default_policy(self):
+        testcase = {
+            "http_details": {
+                "hostname": "google.com",
+                "path": "/",
+                "port": "443",
+                "method_name": "GET",
+                "tls": True,
+            },
+            "monitoring_policy": {
+                "agent_selector": "",
+                "interval": 300,
+            },
+            "name": "google-com-homepage",
+            "description": "Google homepage",
+            "active": True,
+        }
+        response = self.client.post(
+            "/api/v1/monitoring/endpoints",
+            data=json.dumps(testcase),
+            content_type="application/json"
+        )
+        self.assertEquals(response.status_code, 201)
+        self.assertTrue(models.Endpoint.objects.all().exists())
+        self.assertTrue(models.HTTPEndpointDetail.objects.all().exists())
+        self.assertTrue(models.MonitoringPolicy.objects.all().exists())
+
+    def test_create_simple_http_endpoint_with_non_default_policy_without_interval(self):
+        testcase = {
+            "http_details": {
+                "hostname": "google.com",
+                "path": "/",
+                "port": "443",
+                "method_name": "GET",
+                "tls": True,
+            },
+            "monitoring_policy": {
+                "agent_selector": "",
+            },
+            "name": "google-com-homepage",
+            "description": "Google homepage",
+            "active": True,
+        }
+        response = self.client.post(
+            "/api/v1/monitoring/endpoints",
+            data=json.dumps(testcase),
+            content_type="application/json"
+        )
+        self.assertEquals(response.status_code, 201)
+        self.assertTrue(models.Endpoint.objects.all().exists())
+        self.assertTrue(models.HTTPEndpointDetail.objects.all().exists())
+        self.assertTrue(models.MonitoringPolicy.objects.all().exists())
+        self.assertEquals(models.MonitoringPolicy.objects.all().first().interval, 30)
 
     def test_update_simple_http_endpoint(self):
         instance = models.Endpoint.objects.create(name='foo1')
@@ -87,6 +141,27 @@ class EndpointCreationTestCase(APITestCase):
         testcase = {
             "http_details": {
                 "method_name": "abc"
+            },
+        }
+        self.assertEqual(models.Endpoint.objects.get(id=endpoint.id).http_details.port, "443")
+        response = self.client.patch(f"/api/v1/monitoring/endpoints/{endpoint.id}",
+                                     data=json.dumps(testcase), content_type="application/json")
+        self.assertEqual(response.status_code, 400)
+
+    def test_update_interval_in_a_policy(self):
+        endpoint = models.Endpoint.objects.create(name='foo1')
+        models.HTTPEndpointDetail.objects.create(
+            **{'endpoint': endpoint,
+               'hostname': "google.com",
+               'port': "443",
+               'tls': True,
+               'method_name': "GET",
+               'path': "/"})
+        models.MonitoringPolicy.objects.create(**{'endpoint': endpoint})
+
+        testcase = {
+            "monitoring_policy": {
+                "interval": 49283487
             },
         }
         self.assertEqual(models.Endpoint.objects.get(id=endpoint.id).http_details.port, "443")
