@@ -14,6 +14,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
 
     'monitoring',
+    'scheduler',
 
     'rest_framework',
 ]
