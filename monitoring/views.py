@@ -16,7 +16,9 @@ class AgentDetailView(RetrieveUpdateDestroyAPIView):
 
 class EndpointListCreateView(ListCreateAPIView):
     serializer_class = serializers.EndpointSerializer
-    queryset = SimpleLazyObject(lambda: models.Endpoint.objects.all())
+    queryset = SimpleLazyObject(
+        lambda: models.Endpoint.objects.prefetch_related('http_details', 'monitoring_policy').all()
+    )
 
 
 class EndpointDetailView(RetrieveUpdateDestroyAPIView):
