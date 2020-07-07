@@ -6,7 +6,7 @@ class Agent(models.Model):
     Each Agent instance holds require information to access an agent
     """
     name = models.SlugField(verbose_name="Agent ID", primary_key=True, help_text="Unique Human readable slug for agent")
-    namespace = models.CharField(max_length=64, default="global", help_text="Examples: europe.germany.hetzner")
+    namespace = models.CharField(max_length=64, help_text="Examples: europe.germany.hetzner")
     url = models.URLField("Agent Access URL")
     token = models.CharField(max_length=128, )
     status = models.CharField(max_length=16, choices=[
