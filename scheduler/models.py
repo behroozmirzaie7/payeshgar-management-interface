@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from django.utils import timezone
 
@@ -9,6 +11,7 @@ class Inspection(models.Model):
     a new object will created each time we start inspecting an endpoint by one or more agent
     an Inspection could have multiple InspectionTask, depend on the number of agents
     """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     endpoint = models.ForeignKey(monitoring_models.Endpoint, on_delete=models.CASCADE)
     status = models.CharField(max_length=16, default="PENDING", choices=[
         ("PENDING", "PENDING"),
@@ -30,6 +33,7 @@ class InspectionTask(models.Model):
     """
     a new object will created each time we ask an agent to inspect an endpoint
     """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     inspection = models.ForeignKey(Inspection, on_delete=models.CASCADE, related_name="tasks")
     agent = models.ForeignKey(monitoring_models.Agent, on_delete=models.CASCADE)
     status = models.CharField(max_length=16, default="PENDING", choices=[
@@ -57,6 +61,7 @@ class InspectionTask(models.Model):
 
 
 class HTTPInspectionResult(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     inspection_task = models.OneToOneField(InspectionTask, on_delete=models.CASCADE, related_name="http_result")
     successful_connection = models.BooleanField()
     status_code = models.CharField(max_length=4)
