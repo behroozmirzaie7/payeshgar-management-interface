@@ -31,16 +31,11 @@ class Agent(models.Model):
 
 
 class Endpoint(models.Model):
-    id = models.UUIDField(primary_key=True, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.SlugField(verbose_name="Endpoint name", db_index=True, help_text="Human readable slug for Endpoint")
     description = models.TextField(default="")
     active = models.BooleanField(default=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
-
-    def save(self, *args, **kwargs):
-        if self.id is None:
-            self.id = uuid.uuid4()
-        super(Endpoint, self).save(*args, **kwargs)
 
     def __str__(self):
         return f"Endpoint: {self.name}"
