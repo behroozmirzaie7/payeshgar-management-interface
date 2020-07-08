@@ -30,7 +30,7 @@ class InspectionTask(models.Model):
     """
     a new object will created each time we ask an agent to inspect an endpoint
     """
-    inspection = models.ForeignKey(Inspection, on_delete=models.CASCADE)
+    inspection = models.ForeignKey(Inspection, on_delete=models.CASCADE, related_name="tasks")
     agent = models.ForeignKey(monitoring_models.Agent, on_delete=models.CASCADE)
     status = models.CharField(max_length=16, default="PENDING", choices=[
         ("PENDING", "PENDING"),
