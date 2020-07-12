@@ -32,7 +32,7 @@ class Agent(models.Model):
         last_activity is the datetime of the last time server received a valid request from this agent,
         List of agents will be ordered by recent active agents by defaults
     """
-    ip = models.CharField(verbose_name="IP Address", max_length=15)
+    ip = models.CharField(verbose_name="IP Address", primary_key=True, max_length=15)
     name = models.CharField(verbose_name="Agent name", max_length=64)
     country = models.CharField(verbose_name="Country code", max_length=3)
     groups = models.ManyToManyField(Group, related_name="agents")
