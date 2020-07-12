@@ -34,7 +34,7 @@ class Agent(models.Model):
     """
     ip = models.CharField(verbose_name="IP Address", primary_key=True, max_length=15)
     name = models.CharField(verbose_name="Agent name", max_length=64)
-    country = models.CharField(verbose_name="Country code", max_length=3)
+    country = models.CharField(verbose_name="Country code", max_length=3, null=True)
     groups = models.ManyToManyField(Group, related_name="agents")
     last_activity = models.DateTimeField(default=timezone.now)
 
