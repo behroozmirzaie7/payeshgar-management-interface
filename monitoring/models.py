@@ -103,7 +103,7 @@ class MonitoringPolicy(models.Model):
     """
     endpoint = models.OneToOneField(Endpoint, on_delete=models.CASCADE, related_name="monitoring_policy")
     interval = models.PositiveIntegerField(default=30, verbose_name="Interval in seconds")
-    groups = models.ManyToManyField(Group, related_name="+")
+    groups = models.ManyToManyField(Group, related_name="+", blank=True)
 
     def __str__(self):
         return f"Monitoring Policy: Monitoring {self.endpoint_id} every {self.interval} second(s) "
