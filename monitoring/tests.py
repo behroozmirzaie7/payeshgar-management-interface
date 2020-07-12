@@ -4,7 +4,90 @@ from monitoring import models
 from rest_framework.test import APITestCase
 
 
+class AgentCreationTestCase(APITestCase):
+    def setUp(self):
+        self.groups = ["europe", "hetzner", "germany"]
+        models.Group.objects.bulk_create(
+            [models.Group(name=group) for group in self.groups]
+        )
+
+    def test_agent_is_introduce_itself_should_create_agent_record(self):
+        body = dict(
+            name="foo1",
+            groups=self.groups,
+            country="DEU",
+        )
+        response = self.client.post("/api/v1/monitoring/agents", data=json.dumps(body), content_type="application/json")
+
+        self.assertEquals(response.status_code, 201)
+
+    def test_agent_introducing_itself_multiple_time_is_ok(self):
+        body = dict(
+            name="foo_0",
+            groups=self.groups,
+            country="deu",
+        )
+        response = self.client.post("/api/v1/monitoring/agents", data=json.dumps(body), content_type="application/json")
+        self.assertEquals(response.status_code, 201)
+
+        for i in range(1, 10):
+            name = f"foo_{i}"
+            body = dict(
+                name=name,
+                groups=self.groups,
+                country="deu",
+            )
+            response = self.client.post("/api/v1/monitoring/agents", data=json.dumps(body),
+                                        content_type="application/json")
+            data = json.loads(response.content.decode('utf8'))
+            self.assertEquals(response.status_code, 200)
+            self.assertEquals(data['name'], name)
+
+    def test_agent_introducing_itself_with_invalid_country_code_is_not_ok(self):
+        body = dict(
+            name="foo",
+            groups=self.groups,
+            country="99u",
+        )
+        response = self.client.post("/api/v1/monitoring/agents", data=json.dumps(body), content_type="application/json")
+        data = json.loads(response.content)
+        self.assertIn('country', data)
+        self.assertEquals(response.status_code, 400)
+
+
+class ReadingAgentsTestCase(APITestCase):
+    def setUp(self):
+        self.groups = ["europe", "hetzner", "germany"]
+        models.Group.objects.bulk_create(
+            [models.Group(name=group) for group in self.groups]
+        )
+        body = dict(
+            name="foo1",
+            groups=self.groups,
+            country="DEU",
+        )
+        response = self.client.post("/api/v1/monitoring/agents", data=json.dumps(body), content_type="application/json")
+
+        self.assertEquals(response.status_code, 201)
+
+    def test_get_details_of_an_agent(self):
+        response = self.client.get("/api/v1/monitoring/agents/127.0.0.1")
+        data = json.loads(response.content)
+        self.assertEquals(response.status_code, 200)
+
+    def test_get_list_of_agents(self):
+        response = self.client.get("/api/v1/monitoring/agents")
+        data = json.loads(response.content)
+        self.assertEquals(response.status_code, 200)
+
+
 class EndpointCreationTestCase(APITestCase):
+    def setUp(self):
+        self.groups = ["europe", "hetzner", "germany"]
+        models.Group.objects.bulk_create(
+            [models.Group(name=group) for group in self.groups]
+        )
+
     def test_create_simple_http_endpoint_with_default_policy(self):
         testcase = {
             "http_details": {
@@ -14,12 +97,11 @@ class EndpointCreationTestCase(APITestCase):
                 "method_name": "GET",
                 "tls": True,
             },
-            "name": "google-com-homepage",
-            "description": "Google homepage",
-            "active": True,
+            "name": "google-com-homepage"
         }
         response = self.client.post("/api/v1/monitoring/endpoints", data=json.dumps(testcase),
                                     content_type="application/json")
+        print(response.content)
         self.assertEquals(response.status_code, 201)
         self.assertTrue(models.Endpoint.objects.all().exists())
         self.assertTrue(models.HTTPEndpointDetail.objects.all().exists())
@@ -82,13 +164,13 @@ class EndpointCreationTestCase(APITestCase):
     def test_update_simple_http_endpoint(self):
         instance = models.Endpoint.objects.create(name='foo1')
         testcase = {
-            "active": False,
+            "name": "foo2",
         }
-        self.assertTrue(models.Endpoint.objects.get(id=instance.id).active)
+        self.assertEquals(models.Endpoint.objects.get(id=instance.id).name, "foo1")
         response = self.client.patch(f"/api/v1/monitoring/endpoints/{instance.id}",
                                      data=json.dumps(testcase), content_type="application/json")
         self.assertEquals(response.status_code, 200)
-        self.assertFalse(models.Endpoint.objects.get(id=instance.id).active)
+        self.assertEquals(models.Endpoint.objects.get(id=instance.id).name, "foo2")
 
     def test_update_port_in_a_http_endpoint(self):
         endpoint = models.Endpoint.objects.create(name='foo1')

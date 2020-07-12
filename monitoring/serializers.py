@@ -8,21 +8,18 @@ from monitoring import models
 
 
 class AgentSerializer(serializers.ModelSerializer):
+    ip = serializers.CharField(read_only=True)
+
     class Meta:
         model = models.Agent
         exclude = []
 
-    def validate_url(self, value: str):
-        if not value[0:5].lower().startswith("https"):
-            raise ValidationError("Agent access URL must be HTTPS")
-        return value
-
-    def validate_namespace(self, value: str):
-        pattern = r"^[a-z0-9_.]{0,64}$"
-        value = value.lower()
-        if not re.match(pattern, value):
-            raise ValidationError(f"namespaces should match {pattern}")
-        return value
+    def validate_country(self, country_code: str):
+        import iso3166
+        country_code = country_code.upper()
+        if country_code not in iso3166.countries_by_alpha3:
+            raise ValidationError(f"{country_code} is not a valid ISO 3166-1 alpha-3 country code")
+        return country_code
 
 
 class HTTPEndpointDetailSerializer(serializers.ModelSerializer):
