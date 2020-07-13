@@ -14,7 +14,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
 
     'monitoring',
-    'scheduler',
+    'inspecting',
 
     'rest_framework',
 ]
@@ -61,6 +61,11 @@ USE_I18N = False
 USE_L10N = False
 
 USE_TZ = False
+
+CELERY_BROKER_URL = "amqp://{rabbitmq_hostname}:{rabbitmq_port}".format(
+    rabbitmq_hostname=os.environ.get("PAYESHGAR_RABBITMQ_HOSTNAME", "localhost"),
+    rabbitmq_port=os.environ.get("PAYESHGAR_RABBITMQ_PORT", "5672"),
+)
 
 ENVIRONMENT = os.getenv("PAYESHGAR_ENVIRONMENT", "PRODUCTION")
 
