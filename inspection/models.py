@@ -1,7 +1,6 @@
 import uuid
 
 from django.db import models
-from django.utils import timezone
 
 from monitoring import models as monitoring_models
 
@@ -24,7 +23,7 @@ class Inspection(models.Model):
     endpoint = models.ForeignKey(monitoring_models.Endpoint, on_delete=models.CASCADE)
 
     class Meta:
-        ordering = ('timestamp', )
+        ordering = ('timestamp',)
         unique_together = [
             ("endpoint", "timestamp")
         ]
@@ -57,9 +56,9 @@ class HTTPInspectionResult(models.Model):
 
     # Result:
     connection_status = models.CharField(max_length=16, choices=[
-        ("SUCCEED", "SUCCEED", ),
-        ("CONN-FAILED", "CONN-FAILED", ),
-        ("TIMED-OUT", "TIMED-OUT", )
+        ("SUCCEED", "SUCCEED",),
+        ("CONN-FAILED", "CONN-FAILED",),
+        ("TIMED-OUT", "TIMED-OUT",)
     ])
     status_code = models.CharField(max_length=4, null=True)
     response_time = models.DecimalField(max_digits=6, decimal_places=3, null=True)
@@ -71,4 +70,4 @@ class HTTPInspectionResult(models.Model):
         unique_together = [
             ("inspection", "agent_ip")
         ]
-        ordering = ("submitted_at", )
+        ordering = ("submitted_at",)
