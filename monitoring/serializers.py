@@ -93,3 +93,15 @@ class EndpointSerializer(serializers.ModelSerializer):
             if monitoring_policy is not None:
                 self._create_or_update_monitoring_policy(raw_data=monitoring_policy, endpoint=instance)
         return instance
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Group
+        exclude = []
+
+    def validate_name(self, name: str):
+        pattern = '^[a-z0-9-]+$'
+        if re.match(pattern, name):
+            return name
+        raise ValidationError(f"'{name}' is not match with '{pattern}'")

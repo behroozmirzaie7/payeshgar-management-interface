@@ -250,3 +250,43 @@ class EndpointCreationTestCase(APITestCase):
         response = self.client.patch(f"/api/v1/monitoring/endpoints/{endpoint.id}",
                                      data=json.dumps(testcase), content_type="application/json")
         self.assertEqual(response.status_code, 400)
+
+
+class GroupReadWriteTestCase(APITestCase):
+    def test_create_group_sunny_day(self):
+        body = json.dumps(
+            dict(
+                name="hetzner"
+            )
+        )
+        response = self.client.post("/api/v1/monitoring/groups", data=body, content_type="application/json")
+        self.assertEquals(response.status_code, 201)
+
+    def test_create_group_api_should_not_accept_upper_case_names(self):
+        body = json.dumps(
+            dict(
+                name="HETZNER"
+            )
+        )
+        response = self.client.post("/api/v1/monitoring/groups", data=body, content_type="application/json")
+        self.assertEquals(response.status_code, 400)
+        errors = json.loads(response.content)
+        self.assertIn('name', errors)
+
+    def test_create_group_api_should_not_accept_names_with_space(self):
+        body = json.dumps(
+            dict(
+                name="Hetzner Datacenter"
+            )
+        )
+        response = self.client.post("/api/v1/monitoring/groups", data=body, content_type="application/json")
+        self.assertEquals(response.status_code, 400)
+        errors = json.loads(response.content)
+        self.assertIn('name', errors)
+
+    def test_reading_groups_sunny_day(self):
+        models.Group.objects.create(name="sample-group")
+        response = self.client.get("/api/v1/monitoring/groups")
+        list_of_groups = json.loads(response.content)
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(len(list_of_groups), 1)

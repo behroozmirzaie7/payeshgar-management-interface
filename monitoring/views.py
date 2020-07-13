@@ -52,3 +52,11 @@ class EndpointDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = serializers.EndpointSerializer
     queryset = SimpleLazyObject(lambda: models.Endpoint.objects.all())
     lookup_url_kwarg = "endpoint_uuid"
+
+
+class GroupListCreateView(ListCreateAPIView):
+    serializer_class = serializers.GroupSerializer
+    queryset = SimpleLazyObject(
+        lambda: models.Group.objects.all()
+    )
+
