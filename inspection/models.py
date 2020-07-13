@@ -9,7 +9,7 @@ from monitoring import models as monitoring_models
 class Inspection(models.Model):
     """
     Inspection Model:
-    describe an specific inspection of an specific endpoint which happened (or will happen) in a specific time
+    describe a specific inspection of a specific endpoint which happened (or will happen) in a specific time
     Each Inspection could have zero, one or more corresponding HTTPInspectionResult objects.
 
     Primary Key is a UUID to prevent sequentially traversing list of inspections.
