@@ -50,7 +50,8 @@ def generate_inspections():
     margin = now + timedelta(minutes=20)
     for endpoint in monitoring_models.Endpoint.objects.select_related('monitoring_policy').all():
         last_inspection = endpoint.inspections.last()
-        assert isinstance(last_inspection, models.Inspection)
+        if last_inspection is None:
+            last_inspection = models.Inspection.objects.create(endpoint=endpoint, timestamp=now)
         if last_inspection.timestamp < margin:
             continue
         interval = timedelta(seconds=endpoint.monitoring_policy.interval)
