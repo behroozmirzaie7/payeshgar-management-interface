@@ -1,4 +1,6 @@
 import traceback
+from datetime import timedelta, datetime
+
 from celery import shared_task
 from inspecting import models
 from monitoring import models as monitoring_models
@@ -29,3 +31,22 @@ def process_results(agent_ip, submission_time, results):
     except Exception as exp:
         print(traceback.format_exc())
         print(exp)
+
+
+@shared_task
+def generate_inspections():
+    inspections = []
+    # TODO improve the loop and queries
+    now = datetime.now()
+    margin = now + timedelta(minutes=2)
+    for endpoint in monitoring_models.Endpoint.objects.select_related('monitoring_policy').all():
+        last_inspection = endpoint.inspections.last()
+        assert isinstance(last_inspection, models.Inspection)
+        if last_inspection.timestamp < margin:
+            continue
+        interval = timedelta(seconds=endpoint.monitoring_policy.interval)
+        cur = last_inspection.timestamp
+        while (cur - now) < timedelta(minutes=2):
+            cur += interval
+            inspections.append(models.Inspection(endpoint=endpoint, timestamp=cur))
+    models.Inspection.objects.bulk_create(inspections)  # TODO Check for dupicates
