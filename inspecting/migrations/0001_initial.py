@@ -31,17 +31,22 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('agent_ip', models.CharField(max_length=32)),
-                ('connection_status', models.CharField(choices=[('SUCCEED', 'SUCCEED'), ('CONN-FAILED', 'CONN-FAILED'), ('TIMED-OUT', 'TIMED-OUT')], max_length=16)),
+                ('connection_status', models.CharField(
+                    choices=[('SUCCEED', 'SUCCEED'), ('CONN-FAILED', 'CONN-FAILED'), ('TIMED-OUT', 'TIMED-OUT')],
+                    max_length=16)),
                 ('status_code', models.CharField(max_length=4, null=True)),
                 ('response_time', models.DecimalField(decimal_places=3, max_digits=6, null=True)),
                 ('byte_received', models.PositiveIntegerField(null=True)),
                 ('submitted_at', models.DateTimeField(auto_now_add=True)),
-                ('agent', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='monitoring.Agent')),
-                ('inspection', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='http_results', to='inspection.Inspection')),
+                ('agent',
+                 models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='monitoring.Agent')),
+                ('inspecting',
+                 models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='http_results',
+                                   to='inspecting.Inspection')),
             ],
             options={
                 'ordering': ('submitted_at',),
-                'unique_together': {('inspection', 'agent_ip')},
+                'unique_together': {('inspecting', 'agent_ip')},
             },
         ),
     ]

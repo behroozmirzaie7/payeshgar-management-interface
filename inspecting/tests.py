@@ -1,7 +1,7 @@
 import json
 
 from rest_framework.test import APITestCase
-from inspection import models
+from inspecting import models
 from monitoring import models as monitoring_models
 
 
@@ -27,7 +27,7 @@ class ReadingInspectionsTestCase(APITestCase):
             ))
 
     def test_list_all_inspections(self):
-        response = self.client.get("/api/v1/inspection/inspections",)
+        response = self.client.get("/api/v1/inspecting/inspections", )
         self.assertEquals(response.status_code, 200)
         result = response.json()
         self.assertEquals(len(result), 1)
@@ -35,7 +35,7 @@ class ReadingInspectionsTestCase(APITestCase):
         self.assertEquals(len(first_inspection['tasks']), 4)
 
     def test_list_all_inspections2(self):
-        response = self.client.get(f"/api/v1/inspection/inspections/{self.inspection.id}",)
+        response = self.client.get(f"/api/v1/inspecting/inspections/{self.inspection.id}", )
         self.assertEquals(response.status_code, 200)
         result = response.json()
         self.assertEquals(len(result['tasks']), 4)
