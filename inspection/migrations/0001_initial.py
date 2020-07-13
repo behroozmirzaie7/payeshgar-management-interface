@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
                 ('byte_received', models.PositiveIntegerField(null=True)),
                 ('submitted_at', models.DateTimeField(auto_now_add=True)),
                 ('agent', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='monitoring.Agent')),
-                ('inspection', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='http_results', to='scheduler.Inspection')),
+                ('inspection', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='http_results', to='inspection.Inspection')),
             ],
             options={
                 'ordering': ('submitted_at',),
