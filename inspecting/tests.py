@@ -5,6 +5,7 @@ from datetime import timedelta, datetime
 from rest_framework.test import APITestCase
 from inspecting import models
 from monitoring import models as monitoring_models
+from monitoring.models import Agent
 
 
 class InspectionTestingMixin:
@@ -91,6 +92,7 @@ class SubmitInspectionResultTestCase(APITestCase, InspectionTestingMixin):
     def setUp(self):
         self.sample_groups = ["asia", "europe", "china", "us"]
         self.sample_endpoint = self.create_endpoint(group_names=self.sample_groups)
+        self.agent = Agent.objects.create(ip="127.0.0.1", name="Local", country="NWR")
 
     def test_submit_a_single_result_sunny_day(self):
         self._create_sample_inspection()
@@ -149,3 +151,25 @@ class SubmitInspectionResultTestCase(APITestCase, InspectionTestingMixin):
                                     content_type='application/json')
 
         self.assertEquals(response.status_code, 400)
+
+    def test_submit_a_single_valid_result_with_an_unknown_ip(self):
+        self.agent.delete()
+        self._create_sample_inspection()
+        sample_inspection_id = models.Inspection.objects.first().id
+
+        body = json.dumps(
+            [
+                {
+                    'inspection': str(sample_inspection_id),
+                    'connection_status': "SUCCEED",
+                    'status_code': 401,
+                    'response_time': 0.128,
+                    'byte_received': 2048
+                }
+            ]
+        )
+        response = self.client.post("/api/v1/inspecting/inspection-results?validate=1", data=body,
+                                    content_type='application/json')
+
+        self.assertEquals(response.status_code, 401)
+

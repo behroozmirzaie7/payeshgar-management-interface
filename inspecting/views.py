@@ -1,8 +1,13 @@
+from datetime import datetime
+
+from ipware import get_client_ip
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from inspecting import serializers, models, tasks
+from monitoring.models import Agent
 
 
 class InspectionListAPIView(ListAPIView):
@@ -27,11 +32,27 @@ class InspectionListAPIView(ListAPIView):
 class CreateInspectionResultsAPIView(APIView):
     model = models.HTTPInspectionResult
 
+    def get_agent_ip(self):
+        client_ip = get_client_ip(self.request)[0]
+        agent = Agent.objects.filter(ip=client_ip).first()
+        if agent is None:
+            exc = ValidationError({"non_field_error": "IP Address is not recognized"})
+            exc.status_code = 401
+            raise exc
+        return client_ip
+
+    def _run_background_task(self, results):
+        tasks.process_results(
+            agent_ip=self.get_agent_ip(),
+            submission_time=datetime.now(),
+            results=results,
+        )
+
     def post(self, request, *args, **kwargs):
         results = request.data
         force_validate = request.GET.get('validate') == "1"
         if force_validate:
             serializer = serializers.CreateHTTPInspectionResultSerializer(data=results, many=True)
             serializer.is_valid(raise_exception=True)
-        tasks.process_results(results)
+        self._run_background_task(results)
         return Response({}, status=200)  # TODO: an empty response
