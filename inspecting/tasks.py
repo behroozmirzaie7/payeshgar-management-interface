@@ -8,6 +8,11 @@ from monitoring import models as monitoring_models
 
 @shared_task
 def process_results(agent_ip, submission_time, results):
+    """
+    Very simple task to process list of inspection results.
+    In this version, it just save them in database and update agent last_activity
+
+    """
     try:
         agent = monitoring_models.Agent.objects.get(ip=agent_ip)
         agent.last_activity = submission_time
@@ -27,7 +32,6 @@ def process_results(agent_ip, submission_time, results):
         )
         # TODO watch for duplicates
         # TODO Do we need to send notification?
-
     except Exception as exp:
         print(traceback.format_exc())
         print(exp)
@@ -35,6 +39,10 @@ def process_results(agent_ip, submission_time, results):
 
 @shared_task
 def generate_inspections():
+    """
+    Very simple inspection generator, this function will create future inspections to be used by the agents
+    should be called periodically
+    """
     inspections = []
     # TODO improve the loop and queries
 
