@@ -47,7 +47,7 @@ def generate_inspections():
     # TODO improve the loop and queries
 
     now = datetime.now()
-    margin = now + timedelta(minutes=20)
+    margin = now + timedelta(minutes=10)
     for endpoint in monitoring_models.Endpoint.objects.select_related('monitoring_policy').all():
         last_inspection = endpoint.inspections.last()
         if last_inspection is None:
@@ -56,7 +56,7 @@ def generate_inspections():
             continue
         interval = timedelta(seconds=endpoint.monitoring_policy.interval)
         cur = last_inspection.timestamp
-        while (cur - now) < timedelta(minutes=20):
+        while (cur - now) < timedelta(minutes=15):
             cur += interval
             inspections.append(models.Inspection(endpoint=endpoint, timestamp=cur))
     models.Inspection.objects.bulk_create(inspections)  # TODO Check for dupicates
