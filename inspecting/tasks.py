@@ -1,9 +1,10 @@
 import traceback
-
+from celery import shared_task
 from inspecting import models
 from monitoring import models as monitoring_models
 
 
+@shared_task
 def process_results(agent_ip, submission_time, results):
     try:
         agent = monitoring_models.Agent.objects.get(ip=agent_ip)
