@@ -52,7 +52,7 @@ def generate_inspections():
         last_inspection = endpoint.inspections.last()
         if last_inspection is None:
             last_inspection = models.Inspection.objects.create(endpoint=endpoint, timestamp=now)
-        if last_inspection.timestamp < margin:
+        if last_inspection.timestamp >= margin:
             continue
         interval = timedelta(seconds=endpoint.monitoring_policy.interval)
         cur = last_inspection.timestamp
