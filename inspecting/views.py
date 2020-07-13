@@ -1,5 +1,8 @@
 from rest_framework.generics import ListAPIView
-from inspecting import serializers, models
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from inspecting import serializers, models, tasks
 
 
 class InspectionListAPIView(ListAPIView):
@@ -19,3 +22,16 @@ class InspectionListAPIView(ListAPIView):
         if len(filters['groups']) > 0:
             queryset = queryset.distinct().filter(endpoint__monitoring_policy__groups__in=filters['groups'])
         return queryset
+
+
+class CreateInspectionResultsAPIView(APIView):
+    model = models.HTTPInspectionResult
+
+    def post(self, request, *args, **kwargs):
+        results = request.data
+        force_validate = request.GET.get('validate') == "1"
+        if force_validate:
+            serializer = serializers.CreateHTTPInspectionResultSerializer(data=results, many=True)
+            serializer.is_valid(raise_exception=True)
+        tasks.process_results(results)
+        return Response({}, status=200)  # TODO: an empty response

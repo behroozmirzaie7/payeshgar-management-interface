@@ -34,3 +34,9 @@ class InspectionFilteringSerializer(serializers.Serializer):
         if result['after'] > result['before']:
             raise ValidationError("after should be less than or equal to before")
         return result
+
+
+class CreateHTTPInspectionResultSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.HTTPInspectionResult
+        fields = ['inspection', 'connection_status', 'status_code', 'response_time', 'byte_received']

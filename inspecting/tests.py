@@ -1,3 +1,4 @@
+import json
 import random
 from datetime import timedelta, datetime
 
@@ -6,11 +7,7 @@ from inspecting import models
 from monitoring import models as monitoring_models
 
 
-class ReadingInspectionsTestCase(APITestCase):
-    def setUp(self):
-        self.sample_groups = ["asia", "europe", "china", "us"]
-        self.sample_endpoint = self.create_endpoint(group_names=self.sample_groups)
-
+class InspectionTestingMixin:
     def create_endpoint(self, group_names):
         sample_endpoint = monitoring_models.Endpoint.objects.create(name=f'endpoint_{random.randint(1, 1000)}')
         groups = []
@@ -28,6 +25,13 @@ class ReadingInspectionsTestCase(APITestCase):
             models.Inspection.objects.create(endpoint=endpoint or self.sample_endpoint, timestamp=cur)
             cur += interval
 
+
+class ReadingInspectionsTestCase(APITestCase, InspectionTestingMixin):
+
+    def setUp(self):
+        self.sample_groups = ["asia", "europe", "china", "us"]
+        self.sample_endpoint = self.create_endpoint(group_names=self.sample_groups)
+
     def test_list_all_inspections_sunny_day(self):
         self._create_sample_inspection()
         response = self.client.get("/api/v1/inspecting/inspections")
@@ -38,7 +42,6 @@ class ReadingInspectionsTestCase(APITestCase):
         self.assertEquals(len(inspections), 9)
 
     def test_list_all_inspections_for_specific_time_period(self):
-
         # Expectations:
         interval = 5
         time_window = 31
@@ -81,3 +84,68 @@ class ReadingInspectionsTestCase(APITestCase):
         # number of distinct objects are as expected
         distinct_result_count = len(set([i['id'] for i in inspections]))
         self.assertEquals(distinct_result_count, expected_count)
+
+
+class SubmitInspectionResultTestCase(APITestCase, InspectionTestingMixin):
+
+    def setUp(self):
+        self.sample_groups = ["asia", "europe", "china", "us"]
+        self.sample_endpoint = self.create_endpoint(group_names=self.sample_groups)
+
+    def test_submit_a_single_result_sunny_day(self):
+        self._create_sample_inspection()
+        sample_inspection_id = models.Inspection.objects.first().id
+
+        body = json.dumps(
+            [
+                {
+                    'inspection': str(sample_inspection_id),
+                    'connection_status': "SUCCEED",
+                    'status_code': 401,
+                    'response_time': 0.128,
+                    'byte_received': 2048
+                }
+            ]
+        )
+        response = self.client.post("/api/v1/inspecting/inspection-results", data=body, content_type='application/json')
+
+        self.assertEquals(response.status_code, 200)
+
+    def test_submit_a_single_invaid_result_without_validation_flag_should_return_200(self):
+        self._create_sample_inspection()
+        sample_inspection_id = models.Inspection.objects.first().id
+
+        body = json.dumps(
+            [
+                {
+                    'inspection': str(sample_inspection_id),
+                    'connection_status': "SUCCEED",
+                    'status_code': "INVALID",
+                    'response_time': "INVALID VALUE",
+                    'byte_received': "INVALID VALUE"
+                }
+            ]
+        )
+        response = self.client.post("/api/v1/inspecting/inspection-results", data=body, content_type='application/json')
+
+        self.assertEquals(response.status_code, 200)
+
+    def test_submit_a_single_invaid_result_with_validation_flag_should_return_400_and_errors(self):
+        self._create_sample_inspection()
+        sample_inspection_id = models.Inspection.objects.first().id
+
+        body = json.dumps(
+            [
+                {
+                    'inspection': str(sample_inspection_id),
+                    'connection_status': "SUCCEED",
+                    'status_code': "INVALID",
+                    'response_time': "INVALID VALUE",
+                    'byte_received': "INVALID VALUE"
+                }
+            ]
+        )
+        response = self.client.post("/api/v1/inspecting/inspection-results?validate=1", data=body,
+                                    content_type='application/json')
+
+        self.assertEquals(response.status_code, 400)
