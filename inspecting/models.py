@@ -20,7 +20,7 @@ class Inspection(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     timestamp = models.DateTimeField()
-    endpoint = models.ForeignKey(monitoring_models.Endpoint, on_delete=models.CASCADE)
+    endpoint = models.ForeignKey(monitoring_models.Endpoint, on_delete=models.CASCADE, related_name='inspections')
 
     class Meta:
         ordering = ('timestamp',)
