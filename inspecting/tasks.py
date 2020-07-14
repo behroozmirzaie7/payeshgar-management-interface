@@ -20,7 +20,7 @@ def process_results(agent_ip, submission_time, results):
 
         models.HTTPInspectionResult.objects.bulk_create(
             [models.HTTPInspectionResult(
-                inspection=r['inspection'],
+                inspection_id=r['inspection'],
                 agent=agent,
                 agent_ip=agent_ip,
                 connection_status=r['connection_status'],
