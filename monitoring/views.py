@@ -47,6 +47,13 @@ class EndpointListCreateView(ListCreateAPIView):
         lambda: models.Endpoint.objects.prefetch_related('http_details', 'monitoring_policy').all()
     )
 
+    def get_queryset(self):
+        queryset = models.Endpoint.objects.prefetch_related('http_details', 'monitoring_policy')
+        if 'groups' in self.request.GET:
+            groups = self.request.GET.getlist('groups')
+            queryset = queryset.distinct().filter(monitoring_policy__groups__in=groups)
+        return queryset
+
 
 class EndpointDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = serializers.EndpointSerializer
@@ -59,4 +66,3 @@ class GroupListCreateView(ListCreateAPIView):
     queryset = SimpleLazyObject(
         lambda: models.Group.objects.all()
     )
-
