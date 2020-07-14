@@ -1,4 +1,6 @@
 import json
+import random
+
 from monitoring import models
 
 from rest_framework.test import APITestCase
@@ -290,3 +292,71 @@ class GroupReadWriteTestCase(APITestCase):
         list_of_groups = json.loads(response.content)
         self.assertEquals(response.status_code, 200)
         self.assertEquals(len(list_of_groups), 1)
+
+
+class ReadingEndpointTestCase(APITestCase):
+    def setUp(self):
+        self.groups = ["europe", "hetzner", "germany"]
+        models.Group.objects.bulk_create(
+            [models.Group(name=group) for group in self.groups]
+        )
+
+        self._create_endpoint(self.groups)
+
+    def _create_endpoint(self, groups, count=10, endpoint_name_prefix="endpoint"):
+        for i in range(1, count + 1):
+            ep = models.Endpoint.objects.create(name=f"{endpoint_name_prefix}_{random.randint(10, 1000000)}")
+            p = models.MonitoringPolicy.objects.create(endpoint=ep)
+            models.HTTPEndpointDetail.objects.create(endpoint=ep, hostname='foo.com', port=1025, path='/',
+                                                     method_name='get')
+            if groups:
+                p.groups.add(*groups)
+
+    def test_read_endpoints_sunny_day(self):
+        response = self.client.get("/api/v1/monitoring/endpoints")
+        data = response.json()
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(len(data), 10)
+
+    def test_read_endpoints_filter_by_non_existing_group(self):
+        response = self.client.get("/api/v1/monitoring/endpoints?groups=asia")
+        data = response.json()
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(len(data), 0)
+
+    def test_read_endpoints_filter_by_default_groups(self):
+        for g in self.groups:
+            response = self.client.get(f"/api/v1/monitoring/endpoints?groups={g}")
+            data = response.json()
+            self.assertEquals(response.status_code, 200)
+            self.assertEquals(len(data), 10)
+
+    def test_read_endpoints_filter_by_a_specific_group(self):
+        g = models.Group.objects.create(name='asia')
+        self._create_endpoint([g.name], count=3)
+
+        response = self.client.get(f"/api/v1/monitoring/endpoints?groups={g.name}")
+        data = response.json()
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(len(data), 3)
+
+    def test_read_endpoints_filter_by_two_specific_group(self):
+        groups = ['asia', 'africa']
+        for g in groups:
+            models.Group.objects.create(name=g)
+
+        name_prefix = "specific_ep"
+        self._create_endpoint(groups, count=2, endpoint_name_prefix=name_prefix)
+        self._create_endpoint([groups[0]], count=3, endpoint_name_prefix=name_prefix)
+        self._create_endpoint([groups[1]], count=4, endpoint_name_prefix=name_prefix)
+
+        response = self.client.get(f"/api/v1/monitoring/endpoints", data=dict(
+            groups=groups
+        ))
+
+        data = response.json()
+
+        self.assertTrue(all([endpoint['name'].startswith(name_prefix) for endpoint in data]))
+
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(len(data), 2 + 3 + 4)
